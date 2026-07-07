@@ -1,0 +1,32 @@
+# Woodpecker CI: on a v* tag, cross-compile static musl amd64+arm64 binaries and
+# publish them (with SHA-256 sums and install.sh) to a Codeberg release.
+# One-time setup: enable this repo at https://ci.codeberg.org and add a repo
+# secret `codeberg_token` = a Codeberg token with read/write "repository" scope.
+when:
+  - event: tag
+    ref: refs/tags/v*
+
+steps:
+  - name: build
+    image: ghcr.io/rust-cross/cargo-zigbuild
+    commands:
+      - rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl
+      - cargo zigbuild --release --locked --target x86_64-unknown-linux-musl --target aarch64-unknown-linux-musl --bin pwshark
+      - mkdir -p dist
+      - cp target/x86_64-unknown-linux-musl/release/pwshark dist/pwshark-linux-amd64
+      - cp target/aarch64-unknown-linux-musl/release/pwshark dist/pwshark-linux-arm64
+      - cp install.sh dist/install.sh
+      - cd dist && for f in pwshark-linux-amd64 pwshark-linux-arm64; do sha256sum "$f" > "$f.sha256"; done
+
+  - name: publish
+    image: quay.io/thegeeklab/wp-gitea-release
+    settings:
+      base_url: https://codeberg.org
+      api_key:
+        from_secret: codeberg_token
+      files:
+        - dist/pwshark-linux-amd64
+        - dist/pwshark-linux-amd64.sha256
+        - dist/pwshark-linux-arm64
+        - dist/pwshark-linux-arm64.sha256
+        - dist/install.sh

@@ -1,0 +1,16 @@
+[package]
+name = "pwshark"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+repository = "https://codeberg.org/greenseer/pwshark"
+
+[dependencies]
+ratatui = "0.29"
+crossterm = "0.28"
+rand = "0.9"
+clap = { version = "4", features = ["derive"] }
+# default-features = false drops the image-data feature (image/png/flate2/... codec
+# tree) that pwshark never uses — smaller binary and supply-chain surface.
+arboard = { version = "3", default-features = false }
+zeroize = { version = "1", features = ["derive"] }
