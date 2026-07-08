@@ -1,0 +1,9 @@
+pwshark bundles a third-party wordlist as a data asset.
+
+Orchard Street Long List (wordlist.txt)
+  Source:  https://github.com/sts10/orchard-street-wordlists
+  Author:  Sam Schlinkert (sts10)
+  License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+  Bundled unmodified.
+
+The pwshark source code is licensed separately under the MIT License (see LICENSE).

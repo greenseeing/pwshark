@@ -10,7 +10,7 @@ NIST-compliant password generator. btop-style TUI. Offline. Lightning fast.
 - **NIST SP 800-90A** — CSPRNG for all random values
 - **NIST SP 800-63B** — 8–64 char range, no forced composition rules
 - **Word truncation** — keeps first vowel + consonants ≤5 chars (e.g. "seemingly" → "semng")
-- **EFF large diceware** — 7,776 word list embedded in binary
+- **Orchard Street Long List** — 17,576-word curated wordlist embedded in binary
 - **Mode-aware entropy** — charset entropy for random mode, real diceware entropy
   (word count × pool size, adjusted for truncation collisions) for memorable mode
 - **Color-coded output** — uppercase bright, lowercase dim, numbers orange, symbols blue
@@ -119,6 +119,7 @@ pwshark --stdout | xclip -selection clipboard
 --stdout                 Output raw password to stdout (no TUI)
 --count <N>              Number of passwords to generate, stdout mode [default: 1]
 --json                   Emit JSON (stdout mode): array of {password, entropy, strength}
+--notice                 Print third-party attribution for the embedded wordlist and exit
 --mode <MODE>            random | memorable [default: random]
 --length <N>             Password length, random mode [default: 16]
 --words <N>              Word count, memorable mode [default: 4]
@@ -158,4 +159,8 @@ Produces `target/release/pwshark` (~2MB static binary).
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
+
+The embedded wordlist (`wordlist.txt`) is the [Orchard Street Long List](https://github.com/sts10/orchard-street-wordlists)
+by Sam Schlinkert, bundled unmodified under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+See [NOTICE](NOTICE) for attribution.

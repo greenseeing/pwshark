@@ -33,3 +33,21 @@ fn exclude_ambiguous_flag_parses() {
     let args = Args::try_parse_from(["pwshark", "--exclude-ambiguous"]).unwrap();
     assert!(args.get_exclude_ambiguous());
 }
+
+#[test]
+fn notice_flag_parses() {
+    let args = Args::try_parse_from(["pwshark", "--notice"]).unwrap();
+    assert!(args.notice);
+}
+
+#[test]
+fn notice_flag_prints_wordlist_attribution() {
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_pwshark"))
+        .arg("--notice")
+        .output()
+        .expect("run pwshark --notice");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("Orchard Street"), "missing wordlist name: {stdout}");
+    assert!(stdout.contains("CC BY-SA 4.0"), "missing license: {stdout}");
+}

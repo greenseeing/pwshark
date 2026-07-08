@@ -15,8 +15,17 @@ const INSTALL_URL: &str = "https://codeberg.org/greenseer/pwshark/raw/branch/mai
 
 const MAX_COUNT: u16 = 1000;
 
+// The embedded wordlist is CC BY-SA 4.0; its attribution must travel with the
+// binary, since the documented install ships only the compiled binary.
+const NOTICE: &str = include_str!("../NOTICE");
+
 fn main() {
     let args = Args::parse();
+
+    if args.notice {
+        print!("{NOTICE}");
+        return;
+    }
 
     match args.command {
         Some(Command::Update) => run_update(),

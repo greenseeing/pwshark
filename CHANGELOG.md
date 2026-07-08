@@ -4,6 +4,22 @@ All notable changes to pwshark are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `--notice` flag prints the embedded wordlist's third-party attribution
+  (Orchard Street Long List, CC BY-SA 4.0) so the license travels with the
+  binary, not just the source tree.
+
+### Changed
+- Replaced the embedded wordlist with the **Orchard Street Long List** (17,576
+  curated words, CC BY-SA 4.0) in place of the EFF large list (7,776). Under the
+  default 5-char truncation the effective pool grows from 6,448 to 10,110
+  distinct forms, raising word-selection entropy from 12.66 to 13.30 bits per
+  word — for the default 4-word config the reported entropy rises from ~57.1 to
+  ~59.7 bits (the word-selection component alone: 50.6 → 53.2 bits). See NOTICE
+  for attribution.
+
 ## [0.2.0] - 2026-06-15
 
 ### Added
@@ -56,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ratatui TUI, `--stdout` mode, clipboard copy, entropy meter, and embedded
   wordlist.
 
+[Unreleased]: https://codeberg.org/greenseer/pwshark/compare/v0.2.0...HEAD
 [0.2.0]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.2.0
 [0.1.1]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.1.1
 [0.1.0]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.1.0

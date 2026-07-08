@@ -18,6 +18,10 @@ pub struct Args {
     #[arg(long)]
     pub json: bool,
 
+    /// Print third-party attribution for the embedded wordlist and exit
+    #[arg(long)]
+    pub notice: bool,
+
     /// Generation mode
     #[arg(long, value_enum, default_value = "random")]
     pub mode: ModeArg,

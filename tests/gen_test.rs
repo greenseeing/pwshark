@@ -1,6 +1,8 @@
 use pwshark::gen::{calculate_entropy, effective_word_pool, generate_memorable, generate_random,
     memorable_entropy, strength_label, MemorableConfig, RandomConfig};
 
+const WORDLIST_LEN: usize = 17576;
+
 fn make_rng() -> impl rand::Rng {
     rand::rng()
 }
@@ -124,11 +126,28 @@ fn truncate_word_keeps_first_vowel_and_consonants() {
 
 #[test]
 fn effective_word_pool_matches_wordlist() {
-    // EFF diceware list has 7776 entries; truncation collapses near-duplicates.
-    assert_eq!(effective_word_pool(false), 7776);
+    // Orchard Street Long list has 17576 entries; truncation collapses near-duplicates.
+    assert_eq!(effective_word_pool(false), WORDLIST_LEN);
     let truncated = effective_word_pool(true);
-    assert!(truncated < 7776, "truncation must reduce the pool");
-    assert!(truncated > 6000, "but not collapse it drastically: {truncated}");
+    assert!(truncated < WORDLIST_LEN, "truncation must reduce the pool");
+    assert!(truncated > 9500, "but not collapse it drastically: {truncated}");
+}
+
+#[test]
+fn wordlist_is_clean_lowercase_ascii_unique() {
+    use pwshark::gen::WORD_LIST;
+    let mut seen = std::collections::HashSet::new();
+    let mut count = 0;
+    for (i, line) in WORD_LIST.lines().enumerate() {
+        assert!(!line.is_empty(), "blank line at index {i}");
+        assert!(
+            line.chars().all(|c| c.is_ascii_lowercase()),
+            "line {i} is not lowercase ASCII: {line:?}"
+        );
+        assert!(seen.insert(line), "duplicate word: {line:?}");
+        count += 1;
+    }
+    assert_eq!(count, WORDLIST_LEN, "wordlist line count changed unexpectedly");
 }
 
 #[test]
