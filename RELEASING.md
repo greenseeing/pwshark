@@ -25,12 +25,16 @@ cargo at `-j 4`.
 
 1. Update `CHANGELOG.md`: rename `## [Unreleased]` to `## [x.y.z] - YYYY-MM-DD`
    and add the matching link reference at the bottom.
-2. Bump `version` in `Cargo.toml`, then sync `Cargo.lock` (the CI build uses
-   `--locked`, so the lockfile must match the manifest):
+2. Bump `version` in `Cargo.toml`, then sync `Cargo.lock`. The CI build passes
+   `--locked`, so the lockfile must already match the manifest:
 
    ```bash
-   cargo build --locked
+   cargo check            # rewrites Cargo.lock's pwshark entry
+   cargo check --locked   # must pass — this is what CI does
    ```
+
+   Run the sync with a **plain** `cargo check`. Passing `--locked` to the first
+   command cannot work: it refuses to update a stale lockfile and exits 101.
 
 3. Verify green:
 
