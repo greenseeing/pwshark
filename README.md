@@ -68,6 +68,28 @@ The prebuilt binary is fully static and needs **no runtime dependencies** — cl
 > sudo apt install libxcb1-dev libx11-dev libxkbcommon-dev
 > ```
 
+## Uninstall
+
+pwshark is a single binary and writes no config or data files, so removing it is
+just deleting the binary:
+
+```bash
+# Default location for the one-line installer
+rm -f ~/.local/bin/pwshark
+
+# Installed somewhere else? Find it first:
+which pwshark
+# e.g. a manual `cargo build` install:
+sudo rm -f /usr/local/bin/pwshark
+```
+
+If the installer ever fell back to building from source, it also cloned the repo
+to `~/.local/share/pwshark` — remove that too:
+
+```bash
+rm -rf ~/.local/share/pwshark
+```
+
 ## Usage
 
 ### TUI mode
