@@ -4,6 +4,16 @@ All notable changes to pwshark are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-07-10
+
+### Changed
+- Reworked TUI keybindings for clarity: `Tab` is now the sole mode switcher
+  (arrow keys no longer switch modes from the mode selector). `Space` toggles
+  boolean options and cycles the separator. Typing digits on the Length or
+  Words row enters a direct number-edit mode (Enter to apply, Esc to cancel).
+  The mode selector is no longer a focus stop — focus starts on the first
+  option and wraps around with Up/Down.
+
 ## [0.3.0] - 2026-07-08
 
 ### Added
@@ -72,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ratatui TUI, `--stdout` mode, clipboard copy, entropy meter, and embedded
   wordlist.
 
+[0.3.1]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.3.1
 [0.3.0]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.3.0
 [0.2.0]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.2.0
 [0.1.1]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.1.1

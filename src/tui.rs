@@ -29,12 +29,13 @@ struct App {
     separator_idx: usize,
     separator_custom: Option<String>,
     editing_separator: bool,
+    editing_number: bool,
+    number_buffer: String,
     clipboard_msg: Option<String>,
     clipboard: Option<arboard::Clipboard>,
 }
 
 enum Focus {
-    ModeSelector,
     RandomOpt(usize),
     MemorableOpt(usize),
 }
@@ -47,10 +48,12 @@ impl App {
             memorable_cfg: MemorableConfig::default(),
             password: None,
             entropy: 0.0,
-            focus: Focus::ModeSelector,
+            focus: Focus::RandomOpt(0),
             separator_idx: 0,
             separator_custom: None,
             editing_separator: false,
+            editing_number: false,
+            number_buffer: String::new(),
             clipboard_msg: None,
             clipboard: None,
         }
@@ -138,10 +141,7 @@ pub fn run() {
     }
 }
 
-fn run_app(
-    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    app: &mut App,
-) -> io::Result<()> {
+fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut App) -> io::Result<()> {
     let mut clipboard_clear_timer: Option<std::time::Instant> = None;
 
     loop {
@@ -158,6 +158,11 @@ fn run_app(
                     continue;
                 }
 
+                if app.editing_number {
+                    handle_number_edit(key.code, app);
+                    continue;
+                }
+
                 match key.code {
                     KeyCode::Char('q') => return Ok(()),
                     KeyCode::Char('y') => {
@@ -165,9 +170,14 @@ fn run_app(
                         clipboard_clear_timer = Some(std::time::Instant::now());
                     }
                     KeyCode::Char(c) => {
-                        if matches!(app.focus, Focus::MemorableOpt(1)) {
+                        if c == ' ' {
+                            toggle_option(app);
+                        } else if matches!(app.focus, Focus::MemorableOpt(1)) {
                             app.editing_separator = true;
                             app.separator_custom = Some(c.to_string());
+                        } else if is_numeric_focus(&app.focus) && c.is_ascii_digit() {
+                            app.editing_number = true;
+                            app.number_buffer = c.to_string();
                         }
                     }
                     KeyCode::Enter => app.generate(),
@@ -231,32 +241,112 @@ fn handle_separator_edit(code: KeyCode, app: &mut App) {
     }
 }
 
-fn move_focus(app: &mut App, delta: i8) {
-    match &app.focus {
-        Focus::ModeSelector => {
-            if delta > 0 {
-                app.focus = match app.mode {
-                    Mode::Random => Focus::RandomOpt(0),
-                    Mode::Memorable => Focus::MemorableOpt(0),
-                };
+fn is_numeric_focus(focus: &Focus) -> bool {
+    matches!(focus, Focus::RandomOpt(0) | Focus::MemorableOpt(0))
+}
+
+fn handle_number_edit(code: KeyCode, app: &mut App) {
+    match code {
+        KeyCode::Esc => {
+            app.editing_number = false;
+            app.number_buffer.clear();
+        }
+        KeyCode::Enter => {
+            if let Ok(val) = app.number_buffer.parse::<u8>() {
+                match app.focus {
+                    Focus::RandomOpt(0) => {
+                        app.random_cfg.length = val.clamp(8, 64);
+                    }
+                    Focus::MemorableOpt(0) => {
+                        app.memorable_cfg.word_count = val.clamp(3, 8);
+                    }
+                    _ => {}
+                }
+                app.generate();
+            }
+            app.editing_number = false;
+            app.number_buffer.clear();
+        }
+        KeyCode::Backspace => {
+            app.number_buffer.pop();
+            if app.number_buffer.is_empty() {
+                app.editing_number = false;
             }
         }
+        KeyCode::Char(c) if c.is_ascii_digit() && app.number_buffer.len() < 2 => {
+            app.number_buffer.push(c);
+        }
+        _ => {}
+    }
+}
+
+fn toggle_option(app: &mut App) {
+    match app.focus {
+        Focus::RandomOpt(1) => {
+            app.random_cfg.uppercase = !app.random_cfg.uppercase;
+            app.generate();
+        }
+        Focus::RandomOpt(2) => {
+            app.random_cfg.lowercase = !app.random_cfg.lowercase;
+            app.generate();
+        }
+        Focus::RandomOpt(3) => {
+            app.random_cfg.numbers = !app.random_cfg.numbers;
+            app.generate();
+        }
+        Focus::RandomOpt(4) => {
+            app.random_cfg.symbols = !app.random_cfg.symbols;
+            app.generate();
+        }
+        Focus::RandomOpt(5) => {
+            app.random_cfg.exclude_ambiguous = !app.random_cfg.exclude_ambiguous;
+            app.generate();
+        }
+        Focus::MemorableOpt(1) => {
+            if app.separator_custom.is_none() {
+                let presets = separator_presets();
+                app.separator_idx = (app.separator_idx + 1) % presets.len();
+            } else {
+                app.separator_custom = None;
+            }
+            app.generate();
+        }
+        Focus::MemorableOpt(2) => {
+            app.memorable_cfg.capitalize = !app.memorable_cfg.capitalize;
+            app.generate();
+        }
+        Focus::MemorableOpt(3) => {
+            app.memorable_cfg.add_numbers = !app.memorable_cfg.add_numbers;
+            app.generate();
+        }
+        Focus::MemorableOpt(4) => {
+            app.memorable_cfg.truncate = !app.memorable_cfg.truncate;
+            app.generate();
+        }
+        _ => {}
+    }
+}
+
+fn move_focus(app: &mut App, delta: i8) {
+    match app.focus {
         Focus::RandomOpt(i) => {
             let max = app.random_option_count();
-            let new = (*i as i8 + delta).clamp(0, (max - 1) as i8) as usize;
-            if new == 0 && delta < 0 && *i == 0 {
-                app.focus = Focus::ModeSelector;
+            if delta > 0 {
+                app.focus = Focus::RandomOpt((i + 1) % max);
+            } else if i == 0 {
+                app.focus = Focus::RandomOpt(max - 1);
             } else {
-                app.focus = Focus::RandomOpt(new);
+                app.focus = Focus::RandomOpt(i - 1);
             }
         }
         Focus::MemorableOpt(i) => {
             let max = app.memorable_option_count();
-            let new = (*i as i8 + delta).clamp(0, (max - 1) as i8) as usize;
-            if new == 0 && delta < 0 && *i == 0 {
-                app.focus = Focus::ModeSelector;
+            if delta > 0 {
+                app.focus = Focus::MemorableOpt((i + 1) % max);
+            } else if i == 0 {
+                app.focus = Focus::MemorableOpt(max - 1);
             } else {
-                app.focus = Focus::MemorableOpt(new);
+                app.focus = Focus::MemorableOpt(i - 1);
             }
         }
     }
@@ -264,16 +354,6 @@ fn move_focus(app: &mut App, delta: i8) {
 
 fn adjust_option(app: &mut App, delta: i8) {
     match &app.focus {
-        Focus::ModeSelector => {
-            if delta > 0 {
-                app.mode = Mode::Memorable;
-                app.focus = Focus::MemorableOpt(0);
-            } else {
-                app.mode = Mode::Random;
-                app.focus = Focus::RandomOpt(0);
-            }
-            app.generate();
-        }
         Focus::RandomOpt(i) => match *i {
             0 => {
                 let len = &mut app.random_cfg.length;
@@ -365,18 +445,17 @@ fn draw(f: &mut Frame, app: &App) {
 }
 
 fn draw_left(f: &mut Frame, app: &App, area: Rect) {
-    let mode_focused = matches!(app.focus, Focus::ModeSelector);
-
     let mode_line = Line::from(vec![
-        Span::styled(
-            if mode_focused { "> " } else { "  " },
-            Style::default().fg(GREEN),
-        ),
+        Span::raw("  "),
         Span::styled(
             "[Random]",
             Style::default()
-                .fg(if matches!(app.mode, Mode::Random) { GREEN } else { DIM })
-                .add_modifier(if mode_focused && matches!(app.mode, Mode::Random) {
+                .fg(if matches!(app.mode, Mode::Random) {
+                    GREEN
+                } else {
+                    DIM
+                })
+                .add_modifier(if matches!(app.mode, Mode::Random) {
                     Modifier::BOLD
                 } else {
                     Modifier::empty()
@@ -386,8 +465,12 @@ fn draw_left(f: &mut Frame, app: &App, area: Rect) {
         Span::styled(
             "[Memorable]",
             Style::default()
-                .fg(if matches!(app.mode, Mode::Memorable) { GREEN } else { DIM })
-                .add_modifier(if mode_focused && matches!(app.mode, Mode::Memorable) {
+                .fg(if matches!(app.mode, Mode::Memorable) {
+                    GREEN
+                } else {
+                    DIM
+                })
+                .add_modifier(if matches!(app.mode, Mode::Memorable) {
                     Modifier::BOLD
                 } else {
                     Modifier::empty()
@@ -411,7 +494,9 @@ fn draw_left(f: &mut Frame, app: &App, area: Rect) {
     let mut lines: Vec<Line> = vec![mode_line, Line::raw("")];
     lines.extend(options_lines);
 
-    let para = Paragraph::new(lines).block(mode_block).wrap(Wrap { trim: false });
+    let para = Paragraph::new(lines)
+        .block(mode_block)
+        .wrap(Wrap { trim: false });
     f.render_widget(para, area);
 }
 
@@ -444,18 +529,15 @@ fn draw_password_panel(f: &mut Frame, app: &App, area: Rect) {
             .as_str()
             .chars()
             .map(|c| match c {
-                c if c.is_ascii_uppercase() => {
-                    Span::styled(c.to_string(), Style::default().fg(TEXT).add_modifier(Modifier::BOLD))
-                }
+                c if c.is_ascii_uppercase() => Span::styled(
+                    c.to_string(),
+                    Style::default().fg(TEXT).add_modifier(Modifier::BOLD),
+                ),
                 c if c.is_ascii_lowercase() => {
                     Span::styled(c.to_string(), Style::default().fg(DIM))
                 }
-                c if c.is_ascii_digit() => {
-                    Span::styled(c.to_string(), Style::default().fg(ORANGE))
-                }
-                _ => {
-                    Span::styled(c.to_string(), Style::default().fg(BLUE))
-                }
+                c if c.is_ascii_digit() => Span::styled(c.to_string(), Style::default().fg(ORANGE)),
+                _ => Span::styled(c.to_string(), Style::default().fg(BLUE)),
             })
             .collect();
 
@@ -514,10 +596,7 @@ fn draw_strength_panel(f: &mut Frame, app: &App, area: Rect) {
 
     let content_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1),
-            Constraint::Length(gauge_height),
-        ])
+        .constraints([Constraint::Length(1), Constraint::Length(gauge_height)])
         .split(inner);
 
     let label_para = Paragraph::new(label_line);
@@ -542,8 +621,12 @@ fn draw_hints(f: &mut Frame, area: Rect) {
         Span::styled(" Mode  ", Style::default().fg(DIM)),
         Span::styled(" ↑↓", Style::default().fg(GREEN)),
         Span::styled(" Navigate  ", Style::default().fg(DIM)),
+        Span::styled(" Space", Style::default().fg(GREEN)),
+        Span::styled(" Toggle  ", Style::default().fg(DIM)),
         Span::styled(" ←→", Style::default().fg(GREEN)),
         Span::styled(" Adjust  ", Style::default().fg(DIM)),
+        Span::styled(" 0-9", Style::default().fg(GREEN)),
+        Span::styled(" Set  ", Style::default().fg(DIM)),
         Span::styled(" q", Style::default().fg(GREEN)),
         Span::styled(" Quit", Style::default().fg(DIM)),
     ]);
@@ -563,30 +646,45 @@ fn draw_hints(f: &mut Frame, area: Rect) {
 fn draw_random_options(app: &App) -> Vec<Line<'static>> {
     let focused = |i: usize| matches!(app.focus, Focus::RandomOpt(j) if j == i);
     let check = |val: bool| -> &'static str {
-        if val { "[X]" } else { "[ ]" }
+        if val {
+            "[X]"
+        } else {
+            "[ ]"
+        }
+    };
+
+    let length_display = if app.editing_number && focused(0) {
+        format!("{}█", app.number_buffer)
+    } else {
+        format!("{}", app.random_cfg.length)
     };
 
     vec![
-        make_option(focused(0), "Length", &format!("{}", app.random_cfg.length)),
+        make_option(focused(0), "Length", &length_display),
         make_option(focused(1), "Uppercase", check(app.random_cfg.uppercase)),
         make_option(focused(2), "Lowercase", check(app.random_cfg.lowercase)),
         make_option(focused(3), "Numbers", check(app.random_cfg.numbers)),
         make_option(focused(4), "Symbols", check(app.random_cfg.symbols)),
-        make_option(focused(5), "No ambiguous", check(app.random_cfg.exclude_ambiguous)),
+        make_option(
+            focused(5),
+            "No ambiguous",
+            check(app.random_cfg.exclude_ambiguous),
+        ),
     ]
 }
 
 fn draw_memorable_options(app: &App) -> Vec<Line<'static>> {
     let focused = |i: usize| matches!(app.focus, Focus::MemorableOpt(j) if j == i);
     let check = |val: bool| -> &'static str {
-        if val { "[X]" } else { "[ ]" }
+        if val {
+            "[X]"
+        } else {
+            "[ ]"
+        }
     };
 
     let sep_display = if app.editing_separator {
-        format!(
-            "{}█",
-            app.separator_custom.as_deref().unwrap_or("")
-        )
+        format!("{}█", app.separator_custom.as_deref().unwrap_or(""))
     } else if let Some(ref s) = app.separator_custom {
         format!("\"{s}\"")
     } else {
@@ -598,11 +696,25 @@ fn draw_memorable_options(app: &App) -> Vec<Line<'static>> {
         }
     };
 
+    let words_display = if app.editing_number && focused(0) {
+        format!("{}█", app.number_buffer)
+    } else {
+        format!("{}", app.memorable_cfg.word_count)
+    };
+
     vec![
-        make_option(focused(0), "Words", &format!("{}", app.memorable_cfg.word_count)),
+        make_option(focused(0), "Words", &words_display),
         make_option(focused(1), "Separator", &sep_display),
-        make_option(focused(2), "Capitalize", check(app.memorable_cfg.capitalize)),
-        make_option(focused(3), "Add Numbers", check(app.memorable_cfg.add_numbers)),
+        make_option(
+            focused(2),
+            "Capitalize",
+            check(app.memorable_cfg.capitalize),
+        ),
+        make_option(
+            focused(3),
+            "Add Numbers",
+            check(app.memorable_cfg.add_numbers),
+        ),
         make_option(focused(4), "Truncate", check(app.memorable_cfg.truncate)),
     ]
 }
@@ -614,15 +726,16 @@ fn make_option<'a>(focused: bool, label: &str, value: &str) -> Line<'a> {
             indicator,
             Style::default().fg(if focused { GREEN } else { DIM }),
         ),
-        Span::styled(
-            format!("{label}: "),
-            Style::default().fg(TEXT),
-        ),
+        Span::styled(format!("{label}: "), Style::default().fg(TEXT)),
         Span::styled(
             value.to_string(),
-            Style::default().fg(if focused { GREEN } else { DIM }).add_modifier(
-                if focused { Modifier::BOLD } else { Modifier::empty() },
-            ),
+            Style::default()
+                .fg(if focused { GREEN } else { DIM })
+                .add_modifier(if focused {
+                    Modifier::BOLD
+                } else {
+                    Modifier::empty()
+                }),
         ),
     ])
 }
