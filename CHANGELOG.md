@@ -4,6 +4,21 @@ All notable changes to pwshark are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-07-24
+
+No functional changes to pwshark itself — this release moves where it lives.
+
+### Changed
+- pwshark is now hosted at [github.com/greenseeing/pwshark](https://github.com/greenseeing/pwshark);
+  Codeberg's July 2026 Terms of Use disallow projects mostly written with
+  generative-AI tools, so the repo, releases, and CI moved. Releases are now
+  built by GitHub Actions from the same pinned `cargo-zigbuild` image, with the
+  same asset names and per-file SHA-256 sums.
+- `install.sh` and `pwshark update` resolve releases from GitHub. Existing
+  installs upgrade normally while the Codeberg repo still answers: its final
+  commit carries this installer, which already points at GitHub. An install
+  that misses that window just re-runs the one-liner from the README.
+
 ## [0.3.1] - 2026-07-10
 
 ### Changed
@@ -82,8 +97,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ratatui TUI, `--stdout` mode, clipboard copy, entropy meter, and embedded
   wordlist.
 
-[0.3.1]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.3.1
-[0.3.0]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.3.0
-[0.2.0]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.2.0
-[0.1.1]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.1.1
-[0.1.0]: https://codeberg.org/greenseer/pwshark/releases/tag/v0.1.0
+[0.3.2]: https://github.com/greenseeing/pwshark/releases/tag/v0.3.2
+[0.3.1]: https://github.com/greenseeing/pwshark/releases/tag/v0.3.1
+[0.3.0]: https://github.com/greenseeing/pwshark/releases/tag/v0.3.0
+[0.2.0]: https://github.com/greenseeing/pwshark/releases/tag/v0.2.0
+[0.1.1]: https://github.com/greenseeing/pwshark/releases/tag/v0.1.1
+[0.1.0]: https://github.com/greenseeing/pwshark/releases/tag/v0.1.0

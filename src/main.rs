@@ -10,8 +10,8 @@ pub mod gen;
 pub mod tui;
 
 // `pwshark update` re-runs the installer straight from the repo's main branch on
-// Codeberg, which resolves and downloads the latest tagged release binary.
-const INSTALL_URL: &str = "https://codeberg.org/greenseer/pwshark/raw/branch/main/install.sh";
+// GitHub, which resolves and downloads the latest tagged release binary.
+const INSTALL_URL: &str = "https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh";
 
 const MAX_COUNT: u16 = 1000;
 

@@ -124,7 +124,7 @@ impl Args {
 
 #[derive(Subcommand, Clone)]
 pub enum Command {
-    /// Update pwshark to the latest version from Codeberg
+    /// Update pwshark to the latest version from GitHub
     Update,
 }
 

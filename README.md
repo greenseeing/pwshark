@@ -25,15 +25,15 @@ NIST-compliant password generator. btop-style TUI. Offline. Lightning fast.
 ### One-line (Linux/macOS)
 
 ```bash
-curl -fsSL https://codeberg.org/greenseer/pwshark/raw/branch/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh | bash
 ```
 
-This downloads a prebuilt static binary from the latest [Codeberg release](https://codeberg.org/greenseer/pwshark/releases) (verifying its SHA256) and installs it to `~/.local/bin/pwshark` — no Rust toolchain required. On an unsupported architecture or if the download fails, it falls back to building from source.
+This downloads a prebuilt static binary from the latest [GitHub release](https://github.com/greenseeing/pwshark/releases) (verifying its SHA256) and installs it to `~/.local/bin/pwshark` — no Rust toolchain required. On an unsupported architecture or if the download fails, it falls back to building from source.
 
 Pin a specific version with `PWSHARK_VERSION`:
 
 ```bash
-PWSHARK_VERSION=0.1.1 curl -fsSL https://codeberg.org/greenseer/pwshark/raw/branch/main/install.sh | bash
+PWSHARK_VERSION=0.1.1 curl -fsSL https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh | bash
 ```
 
 ### Updating
@@ -48,7 +48,7 @@ Re-runs the installer, which downloads the latest release. It's a fast no-op whe
 
 ```bash
 # Prerequisites: Rust toolchain (https://rustup.rs)
-git clone https://codeberg.org/greenseer/pwshark.git
+git clone https://github.com/greenseeing/pwshark.git
 cd pwshark
 cargo build --release
 sudo cp target/release/pwshark /usr/local/bin/

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # pwshark installer — safe to re-run; upgrades in place when a newer release exists.
 #
-#   curl -fsSL https://codeberg.org/greenseer/pwshark/raw/branch/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh | bash
 #
-# Downloads a prebuilt static binary from the latest Codeberg release (no Rust
+# Downloads a prebuilt static binary from the latest GitHub release (no Rust
 # toolchain required). Falls back to building from source if no prebuilt binary
 # matches this machine, or if the download fails.
 set -euo pipefail
 
-REPO="greenseer/pwshark"
+REPO="greenseeing/pwshark"
 BIN="pwshark"
 
 # --- output helpers -------------------------------------------------------
@@ -50,14 +50,14 @@ latest_version() {
     printf '%s' "${PWSHARK_VERSION#v}"
     return 0
   fi
-  # Resolve the newest release tag (e.g. v0.1.1 -> 0.1.1) via the Codeberg API.
+  # Resolve the newest release tag (e.g. v0.1.1 -> 0.1.1) via the GitHub API.
   local body code
-  body="$(curl -sSL -w $'\n%{http_code}' "https://codeberg.org/api/v1/repos/$REPO/releases/latest" 2>/dev/null || true)"
+  body="$(curl -sSL -w $'\n%{http_code}' "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null || true)"
   code="$(printf '%s' "$body" | tail -n1)"
   body="$(printf '%s' "$body" | sed '$d')"
   if [ -n "$code" ] && [ "$code" != "200" ]; then
-    die "could not fetch the latest release from Codeberg (HTTP $code). Try again later, or pin a version:
-  PWSHARK_VERSION=0.1.1 curl -fsSL https://codeberg.org/$REPO/raw/branch/main/install.sh | bash"
+    die "could not fetch the latest release from GitHub (HTTP $code). Try again later, or pin a version:
+  PWSHARK_VERSION=0.1.1 curl -fsSL https://raw.githubusercontent.com/$REPO/main/install.sh | bash"
   fi
   printf '%s' "$body" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1
 }
@@ -121,7 +121,7 @@ verify_checksum() {
 # so the caller can fall back to a source build.
 install_binary() {
   local version="$1" arch="$2" bindir="$3"
-  local url="https://codeberg.org/$REPO/releases/download/v${version}/${BIN}-linux-${arch}"
+  local url="https://github.com/$REPO/releases/download/v${version}/${BIN}-linux-${arch}"
   step "Downloading $BIN v$version ($arch)"
 
   mkdir -p "$bindir" 2>/dev/null || as_root mkdir -p "$bindir"
@@ -168,7 +168,7 @@ install_binary() {
 # --- source-build fallback ------------------------------------------------
 build_from_source() {
   local bindir="$1" version="${2:-}"
-  local repo_url="https://codeberg.org/$REPO.git"
+  local repo_url="https://github.com/$REPO.git"
   local src_dir="${HOME}/.local/share/pwshark"
 
   warn "falling back to building from source (needs a Rust toolchain)"
