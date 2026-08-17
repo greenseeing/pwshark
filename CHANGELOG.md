@@ -4,6 +4,22 @@ All notable changes to pwshark are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-08-18
+
+### Fixed
+- `pwshark update` no longer reports success when the installer download fails:
+  the curl-to-bash pipeline lacked `pipefail`, so a failed download (e.g. an
+  HTTP 429 from GitHub's rate limiting) fed bash empty input and exited 0
+  without updating anything.
+
+### Changed
+- `pwshark update` and the README one-liner fetch `install.sh` from the latest
+  release's assets instead of `raw.githubusercontent.com`, which GitHub
+  rate-limits per IP for unauthenticated fetches (HTTP 429).
+- The installer resolves the latest version from the `/releases/latest`
+  redirect instead of the GitHub API, whose unauthenticated 60-per-hour budget
+  is shared by everything on the same IP.
+
 ## [0.3.2] - 2026-07-24
 
 No functional changes to pwshark itself — this release moves where it lives.
@@ -97,6 +113,7 @@ No functional changes to pwshark itself — this release moves where it lives.
   ratatui TUI, `--stdout` mode, clipboard copy, entropy meter, and embedded
   wordlist.
 
+[0.3.3]: https://github.com/greenseeing/pwshark/releases/tag/v0.3.3
 [0.3.2]: https://github.com/greenseeing/pwshark/releases/tag/v0.3.2
 [0.3.1]: https://github.com/greenseeing/pwshark/releases/tag/v0.3.1
 [0.3.0]: https://github.com/greenseeing/pwshark/releases/tag/v0.3.0
