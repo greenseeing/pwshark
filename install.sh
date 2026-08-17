@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # pwshark installer — safe to re-run; upgrades in place when a newer release exists.
 #
-#   curl -fsSL https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh | bash
+#   curl -fsSL https://github.com/greenseeing/pwshark/releases/latest/download/install.sh | bash
 #
 # Downloads a prebuilt static binary from the latest GitHub release (no Rust
 # toolchain required). Falls back to building from source if no prebuilt binary
@@ -50,16 +50,17 @@ latest_version() {
     printf '%s' "${PWSHARK_VERSION#v}"
     return 0
   fi
-  # Resolve the newest release tag (e.g. v0.1.1 -> 0.1.1) via the GitHub API.
-  local body code
-  body="$(curl -sSL -w $'\n%{http_code}' "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null || true)"
-  code="$(printf '%s' "$body" | tail -n1)"
-  body="$(printf '%s' "$body" | sed '$d')"
-  if [ -n "$code" ] && [ "$code" != "200" ]; then
-    die "could not fetch the latest release from GitHub (HTTP $code). Try again later, or pin a version:
-  PWSHARK_VERSION=0.1.1 curl -fsSL https://raw.githubusercontent.com/$REPO/main/install.sh | bash"
-  fi
-  printf '%s' "$body" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -n1
+  # Resolve the newest release tag (e.g. v0.1.1 -> 0.1.1) from the redirect of
+  # /releases/latest. Unlike api.github.com (shared 60/hr per-IP budget) and
+  # raw.githubusercontent.com, this endpoint is not rate-limited when
+  # unauthenticated.
+  local tag_url
+  tag_url="$(curl -fsS -o /dev/null -w '%{redirect_url}' "https://github.com/$REPO/releases/latest" 2>/dev/null || true)"
+  case "$tag_url" in
+    */releases/tag/v*) printf '%s' "${tag_url##*/tag/v}" ;;
+    *) die "could not resolve the latest release from https://github.com/$REPO/releases/latest. Try again later, or pin a version:
+  PWSHARK_VERSION=0.1.1 curl -fsSL https://github.com/$REPO/releases/latest/download/install.sh | bash" ;;
+  esac
 }
 
 installed_version() {

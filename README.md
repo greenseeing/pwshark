@@ -25,7 +25,7 @@ NIST-compliant password generator. btop-style TUI. Offline. Lightning fast.
 ### One-line (Linux/macOS)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh | bash
+curl -fsSL https://github.com/greenseeing/pwshark/releases/latest/download/install.sh | bash
 ```
 
 This downloads a prebuilt static binary from the latest [GitHub release](https://github.com/greenseeing/pwshark/releases) (verifying its SHA256) and installs it to `~/.local/bin/pwshark` — no Rust toolchain required. On an unsupported architecture or if the download fails, it falls back to building from source.
@@ -33,7 +33,7 @@ This downloads a prebuilt static binary from the latest [GitHub release](https:/
 Pin a specific version with `PWSHARK_VERSION`:
 
 ```bash
-PWSHARK_VERSION=0.1.1 curl -fsSL https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh | bash
+PWSHARK_VERSION=0.1.1 curl -fsSL https://github.com/greenseeing/pwshark/releases/latest/download/install.sh | bash
 ```
 
 ### Updating

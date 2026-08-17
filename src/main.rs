@@ -9,9 +9,12 @@ pub mod cli;
 pub mod gen;
 pub mod tui;
 
-// `pwshark update` re-runs the installer straight from the repo's main branch on
-// GitHub, which resolves and downloads the latest tagged release binary.
-const INSTALL_URL: &str = "https://raw.githubusercontent.com/greenseeing/pwshark/main/install.sh";
+// `pwshark update` re-runs the installer shipped with the latest release, which
+// resolves and downloads the latest tagged release binary. Release assets are
+// used instead of raw.githubusercontent.com because GitHub rate-limits
+// unauthenticated raw fetches per IP.
+const INSTALL_URL: &str =
+    "https://github.com/greenseeing/pwshark/releases/latest/download/install.sh";
 
 const MAX_COUNT: u16 = 1000;
 
@@ -42,7 +45,9 @@ fn main() {
 fn run_update() {
     let status = std::process::Command::new("bash")
         .arg("-c")
-        .arg(format!("curl -fsSL {INSTALL_URL} | bash"))
+        // pipefail: a failed download must surface as a failure instead of
+        // feeding bash empty input, which would exit 0 and look like success.
+        .arg(format!("set -o pipefail; curl -fsSL {INSTALL_URL} | bash"))
         .status();
     match status {
         Ok(s) if s.success() => {}
